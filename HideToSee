@@ -1,0 +1,186 @@
+# HideToSee - picoCTF 2023
+
+## Challenge Information
+
+| Field | Value |
+|-------|-------|
+| **Challenge Name** | HideToSee |
+| **Category** | Cryptography |
+| **Difficulty** | Medium |
+| **Event** | picoCTF 2023 |
+| **Author** | Sunday Jacob Nwanyim |
+| **Solves** | 13,921 users |
+
+## Description
+```
+How about some hide and seek heh?
+
+Look at this image here.
+```
+
+**Files Provided:** `atbash.jpg`
+
+---
+
+## Solution
+
+### TL;DR
+
+1. Extract hidden data from image using `steghide`
+2. Decrypt the ciphertext using Atbash cipher
+3. Get the flag
+
+### Detailed Walkthrough
+
+#### Step 1: Steganography Analysis
+
+The challenge provides an image file named `atbash.jpg`. The filename itself is a huge hint - it suggests that the Atbash cipher is involved.
+
+First, let's extract hidden data from the image using steghide:
+```bash
+steghide extract -sf atbash.jpg
+```
+
+When prompted for a passphrase, just press Enter (blank passphrase). This successfully extracts a file called `encrypted.txt` containing:
+```
+krxlXGU{zgyzhs_xizxp_xz00558y}
+```
+
+#### Step 2: Understanding Atbash Cipher
+
+Atbash is one of the simplest substitution ciphers where the alphabet is reversed:
+- A ↔ Z
+- B ↔ Y
+- C ↔ X
+- and so on...
+
+The decryption formula:
+- For lowercase: `chr(ord('z') - (ord(char) - ord('a')))`
+- For uppercase: `chr(ord('Z') - (ord(char) - ord('A')))`
+
+#### Step 3: Decryption
+
+I created a Python script to automate the decryption process:
+```python
+def atbash(text):
+    result = []
+    for char in text:
+        if 'a' <= char <= 'z':
+            # Flip lowercase letters
+            result.append(chr(ord('z') - (ord(char) - ord('a'))))
+        elif 'A' <= char <= 'Z':
+            # Flip uppercase letters
+            result.append(chr(ord('Z') - (ord(char) - ord('A'))))
+        else:
+            # Keep non-alphabetic characters unchanged
+            result.append(char)
+    return ''.join(result)
+
+encrypted = "krxlXGU{zgyzhs_xizxp_xz00558y}"
+decrypted = atbash(encrypted)
+
+print(f"Encrypted: {encrypted}")
+print(f"Decrypted: {decrypted}")
+```
+
+#### Output
+```
+Encrypted: krxlXGU{zgyzhs_xizxp_xz00558y}
+Decrypted: picoCTF{atbash_crack_ca00558b}
+```
+
+Character transformation breakdown:
+- `k` → `p` (11th letter from start → 11th from end)
+- `r` → `i`
+- `x` → `c`
+- `l` → `o`
+- `X` → `C`
+- `G` → `T`
+- `U` → `F`
+
+---
+
+## Flag
+```
+picoCTF{atbash_crack_ca00558b}
+```
+
+---
+
+## Complete Solve Script
+```bash
+#!/bin/bash
+
+# Extract hidden data from image
+steghide extract -sf atbash.jpg
+# Press Enter when prompted for passphrase
+
+# Decrypt using Python
+python3 << 'EOF'
+def atbash(text):
+    result = []
+    for char in text:
+        if 'a' <= char <= 'z':
+            result.append(chr(ord('z') - (ord(char) - ord('a'))))
+        elif 'A' <= char <= 'Z':
+            result.append(chr(ord('Z') - (ord(char) - ord('A'))))
+        else:
+            result.append(char)
+    return ''.join(result)
+
+encrypted = "krxlXGU{zgyzhs_xizxp_xz00558y}"
+decrypted = atbash(encrypted)
+
+print(f"Encrypted: {encrypted}")
+print(f"Decrypted: {decrypted}")
+EOF
+```
+
+---
+
+## Tools Used
+
+- **steghide** - Steganography extraction tool
+- **Python 3** - For Atbash cipher decryption
+
+---
+
+## Key Takeaways
+
+1. **Filename hints matter** - The filename `atbash.jpg` directly indicates the cipher type
+2. **Try blank passphrase first** - Many steganography challenges use empty passphrases for simplicity
+3. **Atbash is symmetric** - The same function can be used for both encryption and decryption
+4. **Steganography + Cryptography combo** - This challenge combines two techniques: hiding data in images and encrypting it
+
+---
+
+## References
+
+- [Atbash Cipher - Wikipedia](https://en.wikipedia.org/wiki/Atbash)
+- [Steghide Documentation](http://steghide.sourceforge.net/)
+- [picoCTF Official Website](https://picoctf.org/)
+
+---
+
+## Author
+
+**Glenvio Regalito Rahardjo**
+
+*Solved: December 2024*
+
+---
+
+### Repository Structure
+```
+HideToSee-picoCTF2023/
+├── README.md          # This file
+├── solver.py          # Python decryption script
+├── solve.sh           # Complete solve script
+└── files/
+    ├── atbash.jpg     # Challenge file
+    └── encrypted.txt  # Extracted ciphertext
+```
+
+---
+
+**Note:** This writeup is for educational purposes. Always follow CTF rules and guidelines.
